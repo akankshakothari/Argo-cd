@@ -21,7 +21,7 @@ spec:
       source:
         repoURL: https://github.com/akankshakothari/Argo-cd.git
         targetRevision: main
-        path: '{{path.path}}'               # dev/app1
+        path: '{{path}}'              # dev/app1
         directory:
           recurse: true                     # pick up all YAML files in the folder
       destination:
