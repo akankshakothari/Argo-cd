@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: env-folders
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/akankshakothari/Argo-cd.git
+        revision: main
+        directories:
+          - path: dev/*
+  template:
+    metadata:
+      name: '{{ path.path | replace "/" "-" }}'   # e.g., dev-app1
+      labels:
+        environment: dev
+        app: '{{ path.basename }}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/akankshakothari/Argo-cd.git
+        targetRevision: main
+        path: '{{ path.path }}'                    # e.g., dev/app1
+        directory:
+          recurse: true                            # pick up all YAMLs in the folder
+      destination:
+        server: https://kubernetes.default.svc     # in-cluster
+        namespace: '{{ path.path | replace "/" "-" }}'   # e.g., dev-app1
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
