@@ -1,35 +1,60 @@
+# dev_applicationset.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: env-folders
+  name: sa.dev.us-east-1.appset
   namespace: argocd
 spec:
   generators:
     - git:
         repoURL: https://github.com/akankshakothari/Argo-cd.git
-        revision: main
-        directories:
-          - path: dev/*       # scan all folders under dev/
+        revision: HEAD
+        files:
+          - path: env-config/dev/*.config.json
   template:
     metadata:
-      name: '{{path.basename}}'             # app1
+      name: "sa.{{cluster.env}}.us-east-1.{{app_tags.app_name}}"
       labels:
-        environment: dev
-        app: '{{path.basename}}'
+        app: sa.dev
     spec:
-      project: default
-      source:
-        repoURL: https://github.com/akankshakothari/Argo-cd.git
-        targetRevision: main
-        path: '{{path}}'              # dev/app1
-        directory:
-          recurse: true                     # pick up all YAML files in the folder
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{path.basename}}'      # namespace = app1
+      project: sa.nonprod.apps
+
+      # Ignore manual/HPAs changing replicas on Deployments
+      ignoreDifferences:
+        - group: "apps"
+          kind: "Deployment"
+          jsonPointers:
+            - /spec/replicas
+
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
-          - CreateNamespace=true
+          - RespectIgnoreDifferences=true
+
+      # Where the kustomize overlay for each app lives
+      sources:
+        - repoURL: https://github.com/akankshakothari/Argo-cd.git
+          targetRevision: master
+          # overlays/dev/us-east-1/<app>  (app from JSON)
+          path: "dev/{{cluster.app}}"
+
+      # Common labels added by kustomize for all rendered manifests
+      kustomize:
+        commonLabels:
+          app_component: "{{app_tags.app_component}}"
+          app_contacts: condel
+          app_environment: dev
+          application: software-advice
+          business_unit: sa
+          created_by: condel_gartner.com
+          function: "{{app_tags.function}}"
+          network_environment: dev
+          region: us-east-1
+          app_migrated: "d-server-0ehiyr4t43mkwx"
+
+      # Argo CD destination cluster & namespace (from JSON)
+      destination:
+        name: "{{cluster.name}}"
+        namespace: "{{cluster.namespace}}"
