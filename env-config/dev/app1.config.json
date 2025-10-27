@@ -1,12 +1,12 @@
 {
     "cluster": {
       "name": "demo-eks",
-      "namespace": "app-1",
+      "namespace": "app1",
       "env": "dev",
-      "app": "app-1" 
+      "app": "app1" 
     },
     "app_tags": {
-      "app_name": "app-1",
+      "app_name": "app1",
       "app_component": "api",
       "function": "payments"
     }
