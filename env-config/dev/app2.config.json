@@ -1,0 +1,14 @@
+{
+    "cluster": {
+      "name": "demo-eks",
+      "namespace": "app2",
+      "env": "dev",
+      "app": "app2" 
+    },
+    "app_tags": {
+      "app_name": "app2",
+      "app_component": "api",
+      "function": "payments"
+    }
+  }
+  
