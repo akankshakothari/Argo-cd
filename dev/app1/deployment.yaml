@@ -5,7 +5,7 @@ metadata:
   labels:
     app: hello
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: hello
@@ -26,6 +26,43 @@ spec:
             limits:
               cpu: 200m
               memory: 128Mi
+          envFrom:
+            - secretRef:
+                name: db-credentials
+            - configMapRef:
+                name: db-config
+
+        # Sidecar: proves DB read/write connectivity
+        - name: mysql-smoke
+          image: mysql:8
+          command: ["sh","-c"]
+          args:
+            - |
+              echo "Waiting for DB...";
+              for i in $(seq 1 60); do
+                mysql -h "$DB_HOST" -P "$DB_PORT" -u"$DB_USER" -p"$DB_PASS" -e "SELECT 1" "$DB_NAME" && break || sleep 2
+              done
+              echo "Running smoke loop...";
+              while true; do
+                mysql -h "$DB_HOST" -P "$DB_PORT" -u"$DB_USER" -p"$DB_PASS" -e "
+                  CREATE TABLE IF NOT EXISTS hello_tbl (id INT PRIMARY KEY AUTO_INCREMENT, msg VARCHAR(64));
+                  INSERT INTO hello_tbl (msg) VALUES ('hello-from-eks');
+                  SELECT COUNT(*) AS rows_in_table FROM hello_tbl;
+                " "$DB_NAME";
+                sleep 30;
+              done
+          envFrom:
+            - secretRef:
+                name: db-credentials
+            - configMapRef:
+                name: db-config
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
 ---
 apiVersion: v1
 kind: Service
@@ -40,4 +77,23 @@ spec:
   ports:
     - port: 80
       targetPort: 80
-
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+  namespace: default
+type: Opaque
+stringData:
+  DB_USER: admin
+  DB_PASS: StrongPassword123!
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+  namespace: default
+data:
+  DB_HOST: free-tier-db.xxxxxx.us-east-1.rds.amazonaws.com
+  DB_PORT: "3306"
+  DB_NAME: appdb
