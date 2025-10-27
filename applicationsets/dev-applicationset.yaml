@@ -17,8 +17,7 @@ spec:
       labels:
         app: sa.dev
     spec:
-      project: sa.nonprod.apps
-
+      project: default
       # Ignore manual/HPAs changing replicas on Deployments
       ignoreDifferences:
         - group: "apps"
