@@ -35,23 +35,9 @@ spec:
       # Where the kustomize overlay for each app lives
       sources:
         - repoURL: https://github.com/akankshakothari/Argo-cd.git
-          targetRevision: master
+          targetRevision: main
           # overlays/dev/us-east-1/<app>  (app from JSON)
           path: "dev/{{cluster.app}}"
-
-      # Common labels added by kustomize for all rendered manifests
-      kustomize:
-        commonLabels:
-          app_component: "{{app_tags.app_component}}"
-          app_contacts: condel
-          app_environment: dev
-          application: software-advice
-          business_unit: sa
-          created_by: condel_gartner.com
-          function: "{{app_tags.function}}"
-          network_environment: dev
-          region: us-east-1
-          app_migrated: "d-server-0ehiyr4t43mkwx"
 
       # Argo CD destination cluster & namespace (from JSON)
       destination:
