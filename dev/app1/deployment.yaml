@@ -94,6 +94,6 @@ metadata:
   name: db-config
   namespace: app1
 data:
-  DB_HOST: free-tier-db.xxxxxx.us-east-1.rds.amazonaws.com
+  DB_HOST: free-tier-db.cmpuyy4u8tx4.us-east-1.rds.amazonaws.com
   DB_PORT: "3306"
   DB_NAME: appdb
